@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechTalk Blog</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const createPostBtn = document.getElementById('create-post-btn');
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const showRegister = document.getElementById('show-register');
+            const showLogin = document.getElementById('show-login');
+            const loginModal = document.getElementById('login-modal');
+            const registerModal = document.getElementById('register-modal');
+            const postModal = document.getElementById('post-modal');
+            const adminModal = document.getElementById('admin-modal');
+            const closeModalBtns = document.querySelectorAll('.close-modal');
+            const loadMoreBtn = document.getElementById('load-more');
+            const postsContainer = document.getElementById('posts-container');
+            const postDetail = document.getElementById('post-detail');
+            const commentsContainer = document.getElementById('comments-container');
+            const commentForm = document.getElementById('comment-form');
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            const authButtons = document.querySelector('.auth-buttons');
+            const userMenu = document.querySelector('.user-menu');
+            const usernameDisplay = document.getElementById('username-display');
+            const userAvatar = document.getElementById('user-avatar');
+            const adminLink = document.getElementById('admin-link');
+            const newsletterForm = document.getElementById('newsletter-form');
+            const contactForm = document.getElementById('contact-form');
+            const categoryCards = document.querySelectorAll('.category-card');
+            const searchBar = document.querySelector('.search-bar input');
+            const notificationIcon = document.querySelector('.notification-icon');
+            const chatIcon = document.querySelector('.chat-icon');
+            const notificationPanel = document.querySelector('.notification-panel');
+            const chatPanel = document.querySelector('.chat-panel');
+            const notificationList = document.getElementById('notification-list');
+            const chatList = document.getElementById('chat-list');
+            const chatWindow = document.getElementById('chat-window');
+            const chatMessages = document.getElementById('chat-messages');
+            const closeNotifications = document.querySelector('.close-notifications');
+            const closeChat = document.querySelector('.close-chat');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const usersTable = document.getElementById('users-table');
+            const postsTable = document.getElementById('posts-table');
+            const reportsTable = document.getElementById('reports-table');
+            const pendingPostsBtn = document.getElementById('pending-posts-btn');
+            const pendingPostsModal = document.getElementById('pending-posts-modal');
+            const pendingPostsContainer = document.getElementById('pending-posts-container');
+            const createPostModal = document.getElementById('create-post-modal');
+            const createPostForm = document.getElementById('create-post-form');
+            const userCreatePostBtn = document.getElementById('user-create-post');
+
+            // State
+            let currentUser = null;
+            let notifications = [];
+            let chats = [];
+            let activeChat = null;
+            let users = [];
+            let pendingPosts = [];
+            let isAdmin = false;
+
+            // Sample Data
+            let posts = [
+                {
+                    id: 1,
+                    title: 'The Future of Web Development',
+                    excerpt: 'Exploring the latest trends in web development technologies.',
+                    image: 'https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+                    category: 'technology',
+                    author: 'Alex Johnson',
+                    authorId: 2,
+                    date: 'June 10, 2023',
+                    likes: 42,
+                    likedBy: [],
+                    content: `<p>Web development continues to evolve at a rapid pace. In this article, we'll explore the most exciting trends shaping the future of web development.</p>
+                              <h3>1. Serverless Architecture</h3>
+                              <p>Serverless computing allows developers to build and run applications without thinking about servers. Platforms like AWS Lambda and Azure Functions are leading this revolution.</p>
+                              <h3>2. WebAssembly</h3>
+                              <p>WebAssembly enables high-performance applications to run in the browser at near-native speed, opening up new possibilities for web apps.</p>
+                              <h3>3. Progressive Web Apps</h3>
+                              <p>PWAs combine the best of web and mobile apps, offering offline capabilities, push notifications, and app-like experiences.</p>`,
+                    comments: [
+                        { id: 1, author: 'Sarah Williams', authorId: 3, avatar: 'SW', date: 'June 11, 2023', text: 'Great overview of current trends!' },
+                        { id: 2, author: 'Mike Brown', authorId: 4, avatar: 'MB', date: 'June 12, 2023', text: 'I think WebAssembly will be a game changer for performance-critical applications.' }
+                    ],
+                    approved: true
+                },
+                {
+                    id: 2,
+                    title: 'Getting Started with React 18',
+                    excerpt: 'A beginner-friendly guide to the latest version of React.',
+                    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+                    category: 'programming',
+                    author: 'Emma Davis',
+                    authorId: 5,
+                    date: 'June 5, 2023',
+                    likes: 35,
+                    likedBy: [],
+                    content: `<p>React 18 introduces several exciting new features that improve performance and user experience. Here's what you need to know to get started.</p>
+                              <h3>New Features</h3>
+                              <ul>
+                                  <li>Automatic batching for fewer renders</li>
+                                  <li>New concurrent rendering capabilities</li>
+                                  <li>Improved suspense for data fetching</li>
+                              </ul>
+                              <h3>Getting Started</h3>
+                              <p>To start a new React 18 project, simply run:</p>
+                              <pre>npx create-react-app my-app</pre>
+                              <p>Make sure you're using Node.js 16 or later for the best experience.</p>`,
+                    comments: [
+                        { id: 1, author: 'Tom Wilson', authorId: 6, avatar: 'TW', date: 'June 6, 2023', text: 'The automatic batching feature is a huge performance improvement!' }
+                    ],
+                    approved: true
+                }
+            ];
+
+            // Sample Users
+            users = [
+                { id: 1, name: 'Admin User', email: 'admin@techtalk.com', password: 'admin123', role: 'admin', avatar: 'AU' },
+                { id: 2, name: 'Alex Johnson', email: 'alex@example.com', password: 'alex123', role: 'author', avatar: 'AJ' },
+                { id: 3, name: 'Sarah Williams', email: 'sarah@example.com', password: 'sarah123', role: 'user', avatar: 'SW' },
+                { id: 4, name: 'Mike Brown', email: 'mike@example.com', password: 'mike123', role: 'user', avatar: 'MB' },
+                { id: 5, name: 'Emma Davis', email: 'emma@example.com', password: 'emma123', role: 'author', avatar: 'ED' },
+                { id: 6, name: 'Tom Wilson', email: 'tom@example.com', password: 'tom123', role: 'user', avatar: 'TW' }
+            ];
+
+            // Sample Notifications
+            notifications = [
+                { id: 1, type: 'like', content: 'Sarah Williams liked your post "The Future of Web Development"', postId: 1, read: false, date: '10 min ago' },
+                { id: 2, type: 'comment', content: 'Mike Brown commented on your post', postId: 1, read: false, date: '1 hour ago' },
+                { id: 3, type: 'follow', content: 'Tom Wilson started following you', read: true, date: '2 days ago' }
+            ];
+
+            // Sample Chats
+            chats = [
+                { 
+                    id: 1, 
+                    userId: 3, 
+                    userName: 'Sarah Williams', 
+                    userAvatar: 'SW', 
+                    lastMessage: 'Hey, great article you wrote!', 
+                    unread: 2, 
+                    date: '10 min ago', 
+                    messages: [
+                        { id: 1, sender: 3, text: 'Hey, great article you wrote!', date: '10 min ago' },
+                        { id: 2, sender: 3, text: 'I especially liked the WebAssembly section', date: '9 min ago' }
+                    ] 
+                },
+                { 
+                    id: 2, 
+                    userId: 4, 
+                    userName: 'Mike Brown', 
+                    userAvatar: 'MB', 
+                    lastMessage: 'Can you recommend React resources?', 
+                    unread: 0, 
+                    date: '1 day ago',
+                    messages: [
+                        { id: 1, sender: 4, text: 'Hi there!', date: '1 day ago' },
+                        { id: 2, sender: 4, text: 'Can you recommend React resources?', date: '1 day ago' },
+                        { id: 3, sender: 'current', text: 'Sure, I\'ll send you some links later today', date: '20 hours ago' }
+                    ]
+                }
+            ];
+
+            // Initialize the page
+            renderPosts();
+            renderNotifications();
+            renderChatList();
+            checkAuthState();
+            
+            // Load admin data if user is admin
+            if (currentUser && isAdmin) {
+                renderUsersTable();
+                renderPostsTable();
+            }
+
+            // Event Listeners
+            loginBtn.addEventListener('click', () => toggleModal(loginModal));
+            registerBtn.addEventListener('click', () => toggleModal(registerModal));
+            logoutBtn.addEventListener('click', logout);
+            showRegister.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleModal(loginModal);
+                toggleModal(registerModal);
+            });
+            showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleModal(registerModal);
+                toggleModal(loginModal);
+            });
+            closeModalBtns.forEach(btn => btn.addEventListener('click', closeAllModals));
+            hamburger.addEventListener('click', toggleMobileMenu);
+            loadMoreBtn.addEventListener('click', loadMorePosts);
+            notificationIcon.addEventListener('click', toggleNotifications);
+            chatIcon.addEventListener('click', toggleChat);
+            closeNotifications.addEventListener('click', () => notificationPanel.classList.remove('show'));
+            closeChat.addEventListener('click', () => chatPanel.classList.remove('show'));
+            adminLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleModal(adminModal);
+            });
+            tabBtns.forEach(btn => btn.addEventListener('click', switchAdminTab));
+
+            // Search functionality
+            searchBar.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filteredPosts = posts.filter(post => 
+                    post.title.toLowerCase().includes(term) || 
+                    post.excerpt.toLowerCase().includes(term) ||
+                    post.author.toLowerCase().includes(term)
+                );
+                renderPosts(filteredPosts);
+            });
+
+            pendingPostsBtn.addEventListener('click', () => {
+                toggleModal(pendingPostsModal);
+                renderPendingPosts();
+            });
+
+            createPostBtn.addEventListener('click', () => toggleModal(createPostModal));
+            userCreatePostBtn.addEventListener('click', () => toggleModal(createPostModal));
+
+            function renderPendingPosts() {
+                pendingPostsContainer.innerHTML = '';
+                
+                if (pendingPosts.length === 0) {
+                    pendingPostsContainer.innerHTML = '<p>No pending posts to review</p>';
+                    return;
+                }
+                
+                pendingPosts.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.className = 'pending-post';
+                    postElement.innerHTML = `
+                        <h3>${post.title}</h3>
+                        <div class="post-meta">
+                            <span>By: ${post.author}</span>
+                            <span>Category: ${post.category}</span>
+                        </div>
+                        <p>${post.excerpt}</p>
+                        <div class="pending-actions">
+                            <button class="btn approve-post" data-post-id="${post.id}">Approve</button>
+                            <button class="btn btn-danger reject-post" data-post-id="${post.id}">Reject</button>
+                        </div>
+                    `;
+                    pendingPostsContainer.appendChild(postElement);
+                });
+                
+                // Add event listeners to new buttons
+                document.querySelectorAll('.approve-post').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const postId = parseInt(e.target.dataset.postId);
+                        approvePost(postId);
+                    });
+                });
+                
+                document.querySelectorAll('.reject-post').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const postId = parseInt(e.target.dataset.postId);
+                        rejectPost(postId);
+                    });
+                });
+            }
+
+            function approvePost(postId) {
+                const postIndex = pendingPosts.findIndex(p => p.id === postId);
+                if (postIndex === -1) return;
+                
+                const post = pendingPosts[postIndex];
+                post.date = new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                post.approved = true;
+                
+                posts.unshift(post);
+                pendingPosts.splice(postIndex, 1);
+                
+                renderPendingPosts();
+                renderPosts();
+                showAlert('success', 'Post approved and published!');
+            }
+
+            function rejectPost(postId) {
+                pendingPosts = pendingPosts.filter(p => p.id !== postId);
+                renderPendingPosts();
+                showAlert('success', 'Post rejected and removed');
+            }
+
+            createPostForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                if (!currentUser) return;
+                
+                const newPost = {
+                    id: Date.now(),
+                    title: document.getElementById('post-title').value,
+                    excerpt: document.getElementById('post-excerpt').value,
+                    image: document.getElementById('post-image').value,
+                    category: document.getElementById('post-category').value,
+                    author: currentUser.name,
+                    authorId: currentUser.id,
+                    date: currentUser.role === 'admin' 
+                        ? new Date().toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })
+                        : 'Pending Approval',
+                    likes: 0,
+                    likedBy: [],
+                    content: document.getElementById('post-content').value,
+                    comments: [],
+                    approved: currentUser.role === 'admin'
+                };
+                
+                if (currentUser.role === 'admin') {
+                    posts.unshift(newPost);
+                    renderPosts();
+                    showAlert('success', 'Post published successfully!');
+                } else {
+                    pendingPosts.unshift(newPost);
+                    showAlert('success', 'Post submitted for admin approval');
+                }
+                
+                toggleModal(createPostModal);
+                createPostForm.reset();
+                
+                // Update admin tables if open
+                if (!adminModal.classList.contains('hidden')) {
+                    if (currentUser.role === 'admin') {
+                        renderPostsTable();
+                    }
+                }
+            });
+
+            // Modal functions
+            function toggleModal(modal) {
+                modal.classList.toggle('hidden');
+                document.body.style.overflow = modal.classList.contains('hidden') ? 'auto' : 'hidden';
+                if (!modal.classList.contains('hidden')) {
+                    modal.classList.add('show');
+                } else {
+                    setTimeout(() => modal.classList.remove('show'), 300);
+                }
+            }
+
+            function closeAllModals() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('show');
+                });
+                document.body.style.overflow = 'auto';
+            }
+
+            // Authentication functions
+           function checkAuthState() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        currentUser = user;
+        isAdmin = user.role === 'admin';
+        authButtons.classList.add('hidden');
+        userMenu.classList.remove('hidden');
+        usernameDisplay.textContent = user.name;
+        userAvatar.textContent = user.avatar || user.name.charAt(0);
+        
+        // Only show admin link for admin users
+        if (isAdmin) {
+            adminLink.classList.remove('hidden');
+        } else {
+            adminLink.classList.add('hidden');
+        }
+    } else {
+        currentUser = null;
+        isAdmin = false;
+        authButtons.classList.remove('hidden');
+        userMenu.classList.add('hidden');
+        adminLink.classList.add('hidden');
+    }
+}
+
+            function login(email, password) {
+                // In a real app, this would be an API call
+                const user = users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    checkAuthState();
+                    closeAllModals();
+                    showAlert('success', 'Logged in successfully!');
+                    return true;
+                } else {
+                    showAlert('error', 'Invalid email or password');
+                    return false;
+                }
+            }
+
+            function register(name, email, password) {
+                // Check if user already exists
+                if (users.some(u => u.email === email)) {
+                    showAlert('error', 'Email already registered');
+                    return false;
+                }
+                
+                // Create new user
+                const newUser = {
+                    id: users.length + 1,
+                    name,
+                    email,
+                    password,
+                    role: 'user',
+                    avatar: name.charAt(0) + (name.split(' ')[1] ? name.split(' ')[1].charAt(0) : '')
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+                checkAuthState();
+                closeAllModals();
+                showAlert('success', 'Registration successful!');
+                return true;
+            }
+
+            function logout() {
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                isAdmin = false;
+                checkAuthState();
+                showAlert('success', 'Logged out successfully');
+            }
+
+            // Post functions
+            function renderPosts(postsToRender = posts.filter(p => p.approved).slice(0, 4)) {
+                postsContainer.innerHTML = '';
+                postsToRender.forEach(post => {
+                    const isLiked = currentUser && post.likedBy.includes(currentUser.id);
+                    
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post-card';
+                    postElement.innerHTML = `
+                        <div class="post-image">
+                            <img src="${post.image}" alt="${post.title}">
+                        </div>
+                        <div class="post-content">
+                            <span class="post-category">${post.category}</span>
+                            <h3>${post.title}</h3>
+                            <div class="post-meta">
+                                <span>By ${post.author}</span>
+                                <span>${post.date}</span>
+                            </div>
+                            <p class="post-excerpt">${post.excerpt}</p>
+                            <div class="post-interactions">
+                                <div class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}">
+                                    <i class="fas fa-heart"></i>
+                                    <span>${post.likes}</span>
+                                </div>
+                                <div class="comment-btn" data-post-id="${post.id}">
+                                    <i class="fas fa-comment"></i>
+                                    <span>${post.comments.length}</span>
+                                </div>
+                                <div class="share-btn">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span>Share</span>
+                                    <div class="share-options">
+                                        <a href="#"><i class="fab fa-facebook"></i> Facebook</a>
+                                        <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+                                        <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="#" class="read-more" data-post-id="${post.id}">Read More</a>
+                        </div>
+                    `;
+                    postsContainer.appendChild(postElement);
+                });
+                
+                // Add event listeners to new elements
+                document.querySelectorAll('.like-btn').forEach(btn => {
+                    btn.addEventListener('click', handleLike);
+                });
+                
+                document.querySelectorAll('.comment-btn, .read-more').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const postId = parseInt(btn.dataset.postId);
+                        showPostDetail(postId);
+                    });
+                });
+                
+                document.querySelectorAll('.share-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        btn.querySelector('.share-options').classList.toggle('show');
+                    });
+                });
+            }
+
+            function showPostDetail(postId) {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                
+                const isLiked = currentUser && post.likedBy.includes(currentUser.id);
+                
+                postDetail.innerHTML = `
+                    <h2>${post.title}</h2>
+                    <div class="post-meta-detail">
+                        <span>By ${post.author}</span>
+                        <span>${post.date}</span>
+                    </div>
+                    <div class="post-image-detail">
+                        <img src="${post.image}" alt="${post.title}">
+                    </div>
+                    <div class="post-body">
+                        ${post.content}
+                    </div>
+                    <div class="post-interactions">
+                        <div class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}">
+                            <i class="fas fa-heart"></i>
+                            <span>${post.likes}</span>
+                        </div>
+                        <div class="comment-btn" data-post-id="${post.id}">
+                            <i class="fas fa-comment"></i>
+                            <span>${post.comments.length}</span>
+                        </div>
+                        <div class="share-btn">
+                            <i class="fas fa-share-alt"></i>
+                            <span>Share</span>
+                            <div class="share-options">
+                                <a href="#"><i class="fab fa-facebook"></i> Facebook</a>
+                                <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+                                <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Render comments
+                renderComments(post.comments);
+                
+                // Show/hide comment form based on auth state
+                commentForm.classList.toggle('hidden', !currentUser);
+                
+                toggleModal(postModal);
+                
+                // Add event listeners
+                postDetail.querySelector('.like-btn').addEventListener('click', handleLike);
+                postDetail.querySelector('.share-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    postDetail.querySelector('.share-options').classList.toggle('show');
+                });
+            }
+
+            function renderComments(comments) {
+                commentsContainer.innerHTML = '';
+                comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment';
+                    commentElement.innerHTML = `
+                        <div class="comment-avatar">${comment.avatar}</div>
+                        <div class="comment-content">
+                            <div class="comment-author">${comment.author}</div>
+                            <div class="comment-date">${comment.date}</div>
+                            <div class="comment-text">${comment.text}</div>
+                        </div>
+                    `;
+                    commentsContainer.appendChild(commentElement);
+                });
+            }
+
+            function handleLike(e) {
+                if (!currentUser) {
+                    showAlert('error', 'Please login to like posts');
+                    toggleModal(loginModal);
+                    return;
+                }
+                
+                const btn = e.currentTarget;
+                const postId = parseInt(btn.dataset.postId);
+                const post = posts.find(p => p.id === postId);
+                
+                if (!post) return;
+                
+                const userIndex = post.likedBy.indexOf(currentUser.id);
+                
+                if (userIndex === -1) {
+                    // Like the post
+                    post.likedBy.push(currentUser.id);
+                    post.likes++;
+                    btn.classList.add('liked');
+                    
+                    // Create notification if not the author
+                    if (post.authorId !== currentUser.id) {
+                        const newNotification = {
+                            id: notifications.length + 1,
+                            type: 'like',
+                            content: `${currentUser.name} liked your post "${post.title}"`,
+                            postId: post.id,
+                            read: false,
+                            date: 'Just now'
+                        };
+                        notifications.unshift(newNotification);
+                        renderNotifications();
+                        updateNotificationCount();
+                    }
+                } else {
+                    // Unlike the post
+                    post.likedBy.splice(userIndex, 1);
+                    post.likes--;
+                    btn.classList.remove('liked');
+                }
+                
+                // Update like count
+                btn.querySelector('span').textContent = post.likes;
+                
+                // If the detail view is open for this post, update it too
+                if (!postModal.classList.contains('hidden')) {
+                    const detailLikeBtn = postDetail.querySelector('.like-btn');
+                    if (detailLikeBtn) {
+                        detailLikeBtn.classList.toggle('liked', userIndex === -1);
+                        detailLikeBtn.querySelector('span').textContent = post.likes;
+                    }
+                }
+            }
+
+            // Comment form submission
+            commentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!currentUser) return;
+                
+                const commentText = document.getElementById('comment-text').value;
+                if (!commentText.trim()) return;
+                
+                const postId = parseInt(postDetail.querySelector('.comment-btn').dataset.postId);
+                const post = posts.find(p => p.id === postId);
+                
+                if (!post) return;
+                
+                const newComment = {
+                    id: post.comments.length + 1,
+                    author: currentUser.name,
+                    authorId: currentUser.id,
+                    avatar: currentUser.avatar,
+                    date: 'Just now',
+                    text: commentText
+                };
+                
+                post.comments.unshift(newComment);
+                renderComments(post.comments);
+                document.getElementById('comment-text').value = '';
+                
+                // Update comment count in the post list and detail view
+                const commentCountElements = document.querySelectorAll(`.comment-btn[data-post-id="${postId}"] span`);
+                commentCountElements.forEach(el => {
+                    el.textContent = post.comments.length;
+                });
+                
+                // Create notification if not the author
+                if (post.authorId !== currentUser.id) {
+                    const newNotification = {
+                        id: notifications.length + 1,
+                        type: 'comment',
+                        content: `${currentUser.name} commented on your post "${post.title}"`,
+                        postId: post.id,
+                        read: false,
+                        date: 'Just now'
+                    };
+                    notifications.unshift(newNotification);
+                    renderNotifications();
+                    updateNotificationCount();
+                }
+            });
+
+            // Notification functions
+            function renderNotifications() {
+                notificationList.innerHTML = '';
+                const unreadCount = notifications.filter(n => !n.read).length;
+                
+                notifications.forEach(notification => {
+                    const notificationElement = document.createElement('div');
+                    notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
+                    notificationElement.innerHTML = `
+                        <div class="notification-content">${notification.content}</div>
+                        <div class="notification-time">${notification.date}</div>
+                    `;
+                    notificationElement.addEventListener('click', () => {
+                        // Mark as read
+                        notification.read = true;
+                        renderNotifications();
+                        updateNotificationCount();
+                        
+                        // Handle notification click (e.g., navigate to post)
+                        if (notification.postId) {
+                            showPostDetail(notification.postId);
+                            notificationPanel.classList.remove('show');
+                        }
+                    });
+                    notificationList.appendChild(notificationElement);
+                });
+                
+                // Update notification count
+                updateNotificationCount();
+            }
+
+            function updateNotificationCount() {
+                const unreadCount = notifications.filter(n => !n.read).length;
+                const notificationCount = document.querySelector('.notification-count');
+                
+                if (unreadCount > 0) {
+                    notificationCount.textContent = unreadCount;
+                    notificationCount.classList.remove('hidden');
+                } else {
+                    notificationCount.classList.add('hidden');
+                }
+            }
+
+            // Chat functions
+            function renderChatList() {
+                chatList.innerHTML = '';
+                const unreadCount = chats.reduce((sum, chat) => sum + chat.unread, 0);
+                
+                chats.forEach(chat => {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.innerHTML = `
+                        <div class="chat-avatar">${chat.userAvatar}</div>
+                        <div class="chat-info">
+                            <div class="chat-user">${chat.userName}</div>
+                            <div class="chat-preview">${chat.lastMessage}</div>
+                            <div class="chat-time">${chat.date}</div>
+                        </div>
+                        ${chat.unread > 0 ? `<div class="chat-unread">${chat.unread}</div>` : ''}
+                    `;
+                    chatElement.addEventListener('click', () => openChat(chat.id));
+                    chatList.appendChild(chatElement);
+                });
+                
+                // Update chat count
+                updateChatCount();
+            }
+
+            function openChat(chatId) {
+                const chat = chats.find(c => c.id === chatId);
+                if (!chat) return;
+                
+                activeChat = chatId;
+                chatWindow.classList.remove('hidden');
+                chatList.classList.add('hidden');
+                
+                // Mark as read
+                chat.unread = 0;
+                updateChatCount();
+                
+                // Render messages
+                renderChatMessages(chat.messages);
+            }
+
+            function renderChatMessages(messages) {
+                chatMessages.innerHTML = '';
+                
+                messages.forEach(message => {
+                    const isCurrentUser = message.sender === 'current';
+                    const sender = isCurrentUser ? currentUser : users.find(u => u.id === message.sender);
+                    
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `chat-message ${isCurrentUser ? 'sent' : 'received'}`;
+                    messageElement.innerHTML = `
+                        <div class="message-bubble">${message.text}</div>
+                        <div class="message-time">${message.date}</div>
+                    `;
+                    chatMessages.appendChild(messageElement);
+                });
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function updateChatCount() {
+                const unreadCount = chats.reduce((sum, chat) => sum + chat.unread, 0);
+                const chatCount = document.querySelector('.chat-count');
+                
+                if (unreadCount > 0) {
+                    chatCount.textContent = unreadCount;
+                    chatCount.classList.remove('hidden');
+                } else {
+                    chatCount.classList.add('hidden');
+                }
+            }
+
+            // Chat message submission
+            document.getElementById('chat-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!currentUser || !activeChat) return;
+                
+                const messageInput = document.getElementById('chat-message');
+                const messageText = messageInput.value.trim();
+                if (!messageText) return;
+                
+                const chat = chats.find(c => c.id === activeChat);
+                if (!chat) return;
+                
+                const newMessage = {
+                    id: chat.messages.length + 1,
+                    sender: 'current',
+                    text: messageText,
+                    date: 'Just now'
+                };
+                
+                chat.messages.push(newMessage);
+                chat.lastMessage = messageText;
+                chat.date = 'Just now';
+                
+                messageInput.value = '';
+                renderChatMessages(chat.messages);
+                renderChatList();
+            });
+
+            // Close chat and show chat list
+            document.querySelector('.back-to-chats').addEventListener('click', () => {
+                chatWindow.classList.add('hidden');
+                chatList.classList.remove('hidden');
+                activeChat = null;
+            });
+
+            // Toggle functions
+            function toggleMobileMenu() {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            }
+
+            function toggleNotifications() {
+                notificationPanel.classList.toggle('show');
+                chatPanel.classList.remove('show');
+            }
+
+            function toggleChat() {
+                chatPanel.classList.toggle('show');
+                notificationPanel.classList.remove('show');
+            }
+
+            // Admin functions
+            function switchAdminTab(e) {
+                e.preventDefault();
+                const tabId = this.dataset.tab;
+                
+                tabBtns.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.admin-tab').forEach(tab => {
+                    tab.classList.add('hidden');
+                });
+                
+                document.getElementById(tabId).classList.remove('hidden');
+            }
+
+            function renderUsersTable() {
+                usersTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>
+                                    <div class="user-avatar">${user.avatar}</div>
+                                    ${user.name}
+                                </td>
+                                <td>${user.email}</td>
+                                <td>
+                                    <select class="role-select" data-user-id="${user.id}">
+                                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                                        <option value="author" ${user.role === 'author' ? 'selected' : ''}>Author</option>
+                                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger delete-user" data-user-id="${user.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                // Add event listeners
+                document.querySelectorAll('.role-select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const userId = parseInt(e.target.dataset.userId);
+                        const newRole = e.target.value;
+                        updateUserRole(userId, newRole);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-user').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = parseInt(e.target.dataset.userId);
+                        deleteUser(userId);
+                    });
+                });
+            }
+
+            function updateUserRole(userId, newRole) {
+                const user = users.find(u => u.id === userId);
+                if (!user) return;
+                
+                user.role = newRole;
+                showAlert('success', `User role updated to ${newRole}`);
+                
+                // If current user updated themselves
+                if (currentUser && currentUser.id === userId) {
+                    currentUser.role = newRole;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    checkAuthState();
+                }
+            }
+
+            function deleteUser(userId) {
+                if (currentUser && currentUser.id === userId) {
+                    showAlert('error', 'You cannot delete your own account');
+                    return;
+                }
+                
+                users = users.filter(u => u.id !== userId);
+                renderUsersTable();
+                showAlert('success', 'User deleted successfully');
+            }
+
+            function renderPostsTable() {
+                postsTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Date</th>
+                            <th>Likes</th>
+                            <th>Comments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${posts.map(post => `
+                            <tr>
+                                <td>${post.id}</td>
+                                <td>${post.title}</td>
+                                <td>${post.author}</td>
+                                <td>${post.date}</td>
+                                <td>${post.likes}</td>
+                                <td>${post.comments.length}</td>
+                                <td>
+                                    <button class="btn btn-edit">Edit</button>
+                                    <button class="btn btn-danger delete-post" data-post-id="${post.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                document.querySelectorAll('.delete-post').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const postId = parseInt(e.target.dataset.postId);
+                        deletePost(postId);
+                    });
+                });
+            }
+
+            function deletePost(postId) {
+                posts = posts.filter(p => p.id !== postId);
+                renderPostsTable();
+                renderPosts();
+                showAlert('success', 'Post deleted successfully');
+            }
+
+            // Utility functions
+            function showAlert(type, message) {
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type}`;
+                alert.textContent = message;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 300);
+                }, 3000);
+            }
+
+            function loadMorePosts() {
+                const currentlyDisplayed = document.querySelectorAll('.post-card').length;
+                const nextPosts = posts.filter(p => p.approved).slice(currentlyDisplayed, currentlyDisplayed + 4);
+                
+                if (nextPosts.length === 0) {
+                    loadMoreBtn.disabled = true;
+                    loadMoreBtn.textContent = 'No more posts to load';
+                    return;
+                }
+                
+                renderPosts([...document.querySelectorAll('.post-card'), ...nextPosts]);
+                
+                if (currentlyDisplayed + nextPosts.length >= posts.filter(p => p.approved).length) {
+                    loadMoreBtn.disabled = true;
+                    loadMoreBtn.textContent = 'No more posts to load';
+                }
+            }
+
+            // Login form submission
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                login(email, password);
+            });
+
+            // Register form submission
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('register-name').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                register(name, email, password);
+            });
+        });
+    </script>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        ul {
+            list-style: none;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #3a5a8a;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a6fa5;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #4a6fa5;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .notification-icon, .chat-icon {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .notification-count, .chat-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+        }
+        
+        /* Posts Section */
+        .posts-section {
+            padding: 50px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .section-title h2 {
+            font-size: 2rem;
+            color: #333;
+        }
+        
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .post-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .post-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .post-image {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .post-card:hover .post-image img {
+            transform: scale(1.05);
+        }
+        
+        .post-content {
+            padding: 20px;
+        }
+        
+        .post-category {
+            display: inline-block;
+            background-color: #e1e8f0;
+            color: #4a6fa5;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .post-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .post-excerpt {
+            color: #555;
+            margin-bottom: 20px;
+        }
+        
+        .post-interactions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .like-btn, .comment-btn, .share-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.3s;
+        }
+        
+        .like-btn:hover, .comment-btn:hover, .share-btn:hover {
+            color: #4a6fa5;
+        }
+        
+        .like-btn.liked {
+            color: #e74c3c;
+        }
+        
+        .share-options {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+            z-index: 10;
+        }
+        
+        .share-options.show {
+            display: block;
+        }
+        
+        .share-options a {
+            display: block;
+            padding: 5px 10px;
+            white-space: nowrap;
+        }
+        
+        .share-options a:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .read-more {
+            display: inline-block;
+            color: #4a6fa5;
+            font-weight: 500;
+        }
+        
+        .load-more {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        /* Categories Section */
+        .categories-section {
+            padding: 50px 0;
+            background-color: #f0f4f9;
+        }
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .category-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .category-card i {
+            font-size: 2rem;
+            color: #4a6fa5;
+            margin-bottom: 15px;
+        }
+        
+        .category-card h3 {
+            margin-bottom: 10px;
+        }
+        
+        /* Newsletter Section */
+        .newsletter-section {
+            padding: 50px 0;
+            background-color: #4a6fa5;
+            color: white;
+            text-align: center;
+        }
+        
+        .newsletter-section h2 {
+            margin-bottom: 20px;
+        }
+        
+        .newsletter-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+        }
+        
+        .newsletter-form input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .newsletter-form button {
+            padding: 12px 20px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 40px 0 20px;
+        }
+        
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-column h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column ul li a:hover {
+            color: #4a6fa5;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        
+        .social-links a:hover {
+            background-color: #4a6fa5;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+        
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-50px);
+            transition: transform 0.3s;
+        }
+        
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .form-footer a {
+            color: #4a6fa5;
+            font-weight: 500;
+        }
+        
+        /* Post Detail Modal */
+        .post-detail {
+            padding: 20px;
+        }
+        
+        .post-meta-detail {
+            display: flex;
+            justify-content: space-between;
+            color: #777;
+            margin: 15px 0;
+        }
+        
+        .post-image-detail {
+            height: 300px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .post-image-detail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .post-body {
+            margin-bottom: 30px;
+        }
+        
+        .post-body h3 {
+            margin: 20px 0 10px;
+        }
+        
+        .post-body ul, .post-body ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .post-body pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        
+        .comments-section {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .comments-section h3 {
+            margin-bottom: 20px;
+        }
+        
+        .comment {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .comment-author {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .comment-date {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        /* Notifications Panel */
+        .notification-panel, .chat-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -3px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification-panel.show, .chat-panel.show {
+            right: 0;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .panel-header h3 {
+            font-size: 1.2rem;
+        }
+        
+        .close-notifications, .close-chat {
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .panel-body {
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+        }
+        
+        .notification-item.unread {
+            background-color: #f8fafd;
+        }
+        
+        .notification-content {
+            margin-bottom: 5px;
+        }
+        
+        .notification-time {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        /* Chat Panel */
+        .chat-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+        }
+        
+        .chat-item:hover {
+            background-color: #f8fafd;
+        }
+        
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .chat-user {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .chat-preview {
+            color: #777;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+        }
+        
+        .chat-time {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .chat-unread {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* Chat Window */
+        .chat-window {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .back-to-chats {
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            margin-bottom: 15px;
+        }
+        
+        .chat-message.sent {
+            margin-left: auto;
+        }
+        
+        .chat-message.received {
+            margin-right: auto;
+        }
+        
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .chat-message.sent .message-bubble {
+            background-color: #4a6fa5;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        
+        .chat-message.received .message-bubble {
+            background-color: #f0f0f0;
+            border-bottom-left-radius: 2px;
+        }
+        
+        .message-time {
+            color: #777;
+            font-size: 12px;
+        }
+        
+        .chat-message.sent .message-time {
+            text-align: right;
+        }
+        
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .chat-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-form input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+        }
+        
+        .chat-form button {
+            padding: 10px 15px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        
+        /* Admin Panel */
+        .admin-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab-btn {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-btn.active {
+            border-bottom-color: #4a6fa5;
+            color: #4a6fa5;
+        }
+        
+        .admin-tab {
+            padding: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: 500;
+        }
+        
+        tr:hover {
+            background-color: #f8fafd;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* Alerts */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .alert-success {
+            background-color: #2ecc71;
+        }
+        
+        .alert-error {
+            background-color: #e74c3c;
+        }
+        
+        .alert.fade-out {
+            opacity: 0;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .nav-links, .auth-buttons {
+                display: none;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            
+            .nav-links.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: white;
+                padding: 20px;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .notification-panel, .chat-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+            }
+            
+            .newsletter-form input {
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            
+            .newsletter-form button {
+                border-radius: 4px;
+            }
+        }
+
+        /* Pending Posts Styles */
+        .admin-actions {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .pending-post {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .pending-post h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .pending-post .post-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .pending-post p {
+            margin-bottom: 15px;
+        }
+
+        .pending-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        #create-post-form .form-group {
+            margin-bottom: 15px;
+        }
+
+        #create-post-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        #create-post-form input,
+        #create-post-form textarea,
+        #create-post-form select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #create-post-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">Mygistmate</div>
+            
+            <nav class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Politics</a>
+                <a href="#">Sports</a>
+                <a href="#">Entertainment</a>
+                <a href="#">Programming</a>
+                <a href="#">Design</a>
+               
+            </nav>
+            
+            <div class="auth-buttons">
+                <button id="login-btn" class="btn">Login</button>
+                <button id="register-btn" class="btn">Register</button>
+            </div>
+            
+            <div class="user-menu hidden">
+                <button id="user-create-post" class="btn">Create Post</button>
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-count hidden">0</span>
+                </div>
+                <div class="chat-icon">
+                    <i class="fas fa-comments"></i>
+                    <span class="chat-count hidden">0</span>
+                </div>
+                <div id="user-avatar" class="user-avatar">AU</div>
+                <div id="username-display">User</div>
+                <a href="#" id="admin-link" class="hidden">Admin</a>
+                <button id="logout-btn" class="btn btn-danger">Logout</button>
+            </div>
+            
+            <div class="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Welcome to Mygistmate</h1>
+            <p>Your source for the latest in gist in town, technology, programming, and design news and tutorials.</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search articles...">
+            </div>
+        </div>
+    </section>
+
+    <!-- Posts Section -->
+    <section class="posts-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Latest Articles</h2>
+            </div>
+            
+            <div id="posts-container" class="posts-grid">
+                <!-- Posts will be rendered here by JavaScript -->
+            </div>
+            
+            <div class="load-more">
+                <button id="load-more" class="btn">Load More</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Browse Categories</h2>
+            </div>
+            
+            <div class="categories-grid">
+                <div class="category-card">
+                    <i class="fas fa-code"></i>
+                    <h3>Programming</h3>
+                    <p>Learn about the latest programming languages and frameworks</p>
+                </div>
+                <div class="category-card">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <h3>Politics</h3>
+                    <p>Learn about the latest development in politics</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-music"></i>
+                    <h3>Entertainment</h3>
+                    <p>Stay updated in the world of Entertainmentp>
+                </div>
+                <div class="category-card">
+                    <i class="fa-solid fa-volleyball"></i>
+                    <h3>Sports</h3>
+                    <p>Connect with your favourite club and stay informed </p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-laptop-code"></i>
+                    <h3>Web Development</h3>
+                    <p>Frontend and backend web development tutorials</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Mobile</h3>
+                    <p>iOS and Android development resources</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-server"></i>
+                    <h3>DevOps</h3>
+                    <p>Cloud computing and infrastructure guides</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter-section">
+        <div class="container">
+            <h2>Subscribe to our Newsletter</h2>
+            <p>Get the latest tech news and tutorials delivered to your inbox</p>
+            <form id="newsletter-form" class="newsletter-form">
+                <input type="email" placeholder="Your email address">
+                <button type="submit" class="btn">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-column">
+                    <h3>Mygistmate</h3>
+                    <p>Your source for the latest in politics, sports, technology, programming, and design news and tutorials.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Categories</h3>
+                    <ul>
+                        <li><a href="#">Politics</a></li>
+                        <li><a href="#">Sports</a></li>
+                        <li><a href="#">Entertainment</a></li>
+                        <li><a href="#">Foriegn affair</a></li>
+                        <li><a href="#">Programming</a></li>
+                        <li><a href="#">Web Development</a></li>
+                        <li><a href="#">Mobile</a></li>
+                        <li><a href="#">DevOps</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> info@techtalk.com</li>
+                        <li><i class="fas fa-phone"></i> +234 7069958609</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 ikoyi lagos state</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; Generations:2025.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Login</h2>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn">Login</button>
+                        <a href="#" id="show-register">Don't have an account? Register</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Register</h2>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn">Register</button>
+                        <a href="#" id="show-login">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div id="post-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="post-detail" class="post-detail">
+                <!-- Post content will be rendered here by JavaScript -->
+            </div>
+            <div class="comments-section">
+                <h3>Comments</h3>
+                <div id="comments-container">
+                    <!-- Comments will be rendered here by JavaScript -->
+                </div>
+                <form id="comment-form" class="hidden">
+                    <div class="form-group">
+                        <textarea id="comment-text" placeholder="Add a comment..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Post Comment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Admin Panel</h2>
+            </div>
+            <div class="modal-body">
+                <div class="admin-actions">
+                    <button id="create-post-btn" class="btn">Create New Post</button>
+                    <button id="pending-posts-btn" class="btn">Pending Posts</button>
+                </div>
+                
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="users-tab">Users</button>
+                    <button class="tab-btn" data-tab="posts-tab">Posts</button>
+                    <button class="tab-btn" data-tab="reports-tab">Reports</button>
+                </div>
+                
+                <div id="users-tab" class="admin-tab">
+                    <table id="users-table">
+                        <!-- Users table will be rendered here by JavaScript -->
+                    </table>
+                </div>
+                
+                <div id="posts-tab" class="admin-tab hidden">
+                    <table id="posts-table">
+                        <!-- Posts table will be rendered here by JavaScript -->
+                    </table>
+                </div>
+                
+                <div id="reports-tab" class="admin-tab hidden">
+                    <table id="reports-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Content</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5">No reports available</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div id="create-post-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Create New Post</h2>
+            </div>
+            <div class="modal-body">
+                <form id="create-post-form">
+                    <div class="form-group">
+                        <label for="post-title">Title</label>
+                        <input type="text" id="post-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-excerpt">Excerpt</label>
+                        <textarea id="post-excerpt" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-image">Image URL</label>
+                        <input type="url" id="post-image" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-category">Category</label>
+                        <select id="post-category" required>
+                            <option value="politics">Politics</option>
+                            <option value="sports">Sports</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="programming">Programming</option>
+                            <option value="design">Design</option>
+                            <option value="web-development">Web Development</option>
+                            <option value="mobile">Mobile</option>
+                            <option value="devops">DevOps</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-content">Content (HTML)</label>
+                        <textarea id="post-content" rows="10" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Publish Post</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Posts Modal -->
+    <div id="pending-posts-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <h2>Pending Posts</h2>
+            </div>
+            <div class="modal-body">
+                <div id="pending-posts-container">
+                    <!-- Pending posts will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div class="notification-panel">
+        <div class="panel-header">
+            <h3>Notifications</h3>
+            <span class="close-notifications">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div id="notification-list">
+                <!-- Notifications will be rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel">
+        <div class="panel-header">
+            <h3>Messages</h3>
+            <span class="close-chat">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div id="chat-list">
+                <!-- Chat list will be rendered here by JavaScript -->
+            </div>
+            
+            <div id="chat-window" class="chat-window hidden">
+                <div class="chat-header">
+                    <span class="back-to-chats"><i class="fas fa-arrow-left"></i></span>
+                    <div class="chat-avatar">SW</div>
+                    <div class="chat-user">Sarah Williams</div>
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Chat messages will be rendered here by JavaScript -->
+                </div>
+                <div class="chat-input">
+                    <form id="chat-form" class="chat-form">
+                        <input type="text" id="chat-message" placeholder="Type a message...">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
